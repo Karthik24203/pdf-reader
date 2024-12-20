@@ -29,6 +29,9 @@ export async function POST(req) {
       `data:${pdfFile.type};base64,${base64File}`
     );
 
+    // Ensure the URL is served over HTTPS
+    const secureFileUrl = uploadResult.url.replace("http://", "https://");
+
     const userId = await db
       .select({ id: Users.id }) // Explicitly select the `id` from Users
       .from(Users) // Query the Users table
@@ -36,11 +39,11 @@ export async function POST(req) {
       .execute();
 
     const id = userId[0].id;
-
+    console.log(secureFileUrl); // Log the secure URL
     const fileupload = await db
       .insert(Files)
       .values({
-        fileUrl: uploadResult.url,
+        fileUrl: secureFileUrl, // Use the HTTPS URL
         fileName: fileName,
         userId: id,
       })
@@ -48,7 +51,7 @@ export async function POST(req) {
 
     return NextResponse.json({
       message: "File uploaded successfully",
-      fileUrl: uploadResult.url,
+      fileUrl: secureFileUrl, // Return the HTTPS URL
       fileName,
       userId: id,
       fileId: fileupload[0].fileId,
